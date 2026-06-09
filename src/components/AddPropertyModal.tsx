@@ -1,0 +1,463 @@
+"use client";
+
+import { useState } from "react";
+import { ClipboardPaste, PencilLine, Search, Sparkles, Loader2, Plus } from "lucide-react";
+import { Button, Modal, Field, Input, Select, Textarea, Badge, Spinner } from "./ui";
+import { keyHeaders } from "@/lib/keys";
+import { usd, bedsLabel } from "@/lib/format";
+import type { CityConfig, Property, PropertyType, ExtractedListing, ListingSearchResult, Project } from "@/lib/types";
+
+type Mode = "manual" | "paste" | "search";
+
+const BLANK = {
+  address: "",
+  unit: "",
+  complex: "",
+  price: "",
+  beds: "2",
+  baths: "2",
+  sqft: "",
+  propertyType: "condo" as PropertyType,
+  yearBuilt: "",
+  daysOnMarket: "",
+  hoaMonthly: "",
+  tier: "",
+  zillowUrl: "",
+  strStatus: "unknown" as Property["strStatus"],
+};
+type FormState = typeof BLANK;
+
+export function AddPropertyModal({
+  open,
+  onClose,
+  city,
+  project,
+  onAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  city: CityConfig;
+  project: Project;
+  onAdd: (props: Partial<Property>[]) => void;
+}) {
+  const [mode, setMode] = useState<Mode>("manual");
+  const [form, setForm] = useState<FormState>({ ...BLANK, tier: city.tiers[0]?.key ?? "" });
+  const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  function reset() {
+    setForm({ ...BLANK, tier: city.tiers[0]?.key ?? "" });
+  }
+
+  function buildOne(): Partial<Property> | null {
+    if (!form.address.trim() || !form.price) {
+      alert("Address and price are required.");
+      return null;
+    }
+    return {
+      cityKey: city.key,
+      address: form.address.trim(),
+      unit: form.unit.trim() || undefined,
+      complex: form.complex.trim() || undefined,
+      price: Number(form.price),
+      beds: Number(form.beds),
+      baths: Number(form.baths),
+      sqft: form.sqft ? Number(form.sqft) : undefined,
+      propertyType: form.propertyType,
+      yearBuilt: form.yearBuilt ? Number(form.yearBuilt) : undefined,
+      daysOnMarket: form.daysOnMarket ? Number(form.daysOnMarket) : undefined,
+      hoaMonthly: form.hoaMonthly ? Number(form.hoaMonthly) : undefined,
+      tier: form.tier || undefined,
+      zillowUrl: form.zillowUrl.trim() || undefined,
+      strStatus: form.strStatus,
+    };
+  }
+
+  function submitManual() {
+    const p = buildOne();
+    if (!p) return;
+    onAdd([p]);
+    reset();
+    onClose();
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Add property" wide>
+      <div className="mb-4 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
+        <ModeBtn icon={<PencilLine size={15} />} label="Manual" active={mode === "manual"} onClick={() => setMode("manual")} />
+        <ModeBtn icon={<ClipboardPaste size={15} />} label="Smart paste" active={mode === "paste"} onClick={() => setMode("paste")} />
+        <ModeBtn icon={<Search size={15} />} label="Budget search" active={mode === "search"} onClick={() => setMode("search")} />
+      </div>
+
+      {mode === "paste" && <PastePanel form={form} setField={set} />}
+      {mode === "search" && <SearchPanel city={city} project={project} onAdd={onAdd} onClose={onClose} />}
+
+      {mode !== "search" && (
+        <ManualForm city={city} form={form} set={set} onSubmit={submitManual} onCancel={onClose} />
+      )}
+    </Modal>
+  );
+}
+
+function ModeBtn({ icon, label, active, onClick }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition ${
+        active ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+// ---- Smart paste -----------------------------------------------------------
+
+function PastePanel({ form, setField }: { form: FormState; setField: (k: keyof FormState, v: string) => void }) {
+  const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState<"" | "scrape" | "extract">("");
+  const [msg, setMsg] = useState<{ tone: "info" | "ok" | "err"; text: string } | null>(null);
+
+  async function scrape() {
+    if (!url.trim()) return;
+    setBusy("scrape");
+    setMsg(null);
+    try {
+      const res = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const data = await res.json();
+      if (data.text) setText(data.text);
+      if (data.blocked) setMsg({ tone: "err", text: data.message || "Site blocked the request — paste the text manually." });
+      else if (data.text) setMsg({ tone: "ok", text: "Fetched page text — now click Extract." });
+      else setMsg({ tone: "err", text: data.message || "Nothing fetched." });
+    } catch {
+      setMsg({ tone: "err", text: "Fetch failed." });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function extract() {
+    if (!text.trim()) {
+      setMsg({ tone: "err", text: "Paste some listing text first." });
+      return;
+    }
+    setBusy("extract");
+    setMsg(null);
+    try {
+      const res = await fetch("/api/extract-listing", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...keyHeaders() },
+        body: JSON.stringify({ text, url: url.trim() || undefined }),
+      });
+      const data = (await res.json()) as ExtractedListing & { error?: string; message?: string };
+      if (data.error) {
+        setMsg({ tone: "err", text: data.message || "Extraction failed. Check your Anthropic key in Settings." });
+        return;
+      }
+      if (data.address) setField("address", data.address);
+      if (data.unit) setField("unit", data.unit);
+      if (data.complex) setField("complex", data.complex);
+      if (data.price) setField("price", String(data.price));
+      if (data.beds !== undefined) setField("beds", String(data.beds));
+      if (data.baths !== undefined) setField("baths", String(data.baths));
+      if (data.sqft) setField("sqft", String(data.sqft));
+      if (data.propertyType) setField("propertyType", data.propertyType);
+      if (data.yearBuilt) setField("yearBuilt", String(data.yearBuilt));
+      if (data.daysOnMarket) setField("daysOnMarket", String(data.daysOnMarket));
+      if (data.hoaMonthly) setField("hoaMonthly", String(data.hoaMonthly));
+      if (url.trim()) setField("zillowUrl", url.trim());
+      setMsg({ tone: "ok", text: "Extracted — review the fields below and click Add." });
+    } catch {
+      setMsg({ tone: "err", text: "Extraction failed." });
+    } finally {
+      setBusy("");
+    }
+  }
+
+  return (
+    <div className="mb-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <Field label="Listing URL (optional)" hint="Zillow often blocks bots — if Fetch fails, just paste the listing text below.">
+        <div className="flex gap-2">
+          <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.zillow.com/homedetails/..." />
+          <Button onClick={scrape} disabled={busy !== "" || !url.trim()}>
+            {busy === "scrape" ? <Spinner /> : "Fetch"}
+          </Button>
+        </div>
+      </Field>
+      <Field label="Paste listing text" hint="Select all the text on the Zillow listing page (⌘A ⌘C) and paste here.">
+        <Textarea rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste the full listing text here…" />
+      </Field>
+      <div className="flex items-center gap-3">
+        <Button variant="primary" onClick={extract} disabled={busy !== ""}>
+          {busy === "extract" ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Extract with AI
+        </Button>
+        {msg && (
+          <span className={`text-xs ${msg.tone === "err" ? "text-red-600" : msg.tone === "ok" ? "text-emerald-600" : "text-slate-500"}`}>
+            {msg.text}
+          </span>
+        )}
+      </div>
+      {form.address && <p className="text-xs text-slate-500">Parsed into the form below ↓</p>}
+    </div>
+  );
+}
+
+// ---- Manual / review form --------------------------------------------------
+
+function ManualForm({
+  city,
+  form,
+  set,
+  onSubmit,
+  onCancel,
+}: {
+  city: CityConfig;
+  form: FormState;
+  set: (k: keyof FormState, v: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <Field label="Address *">
+            <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="485 Gulf Shore Dr" />
+          </Field>
+        </div>
+        <Field label="Unit / Apt">
+          <Input value={form.unit} onChange={(e) => set("unit", e.target.value)} placeholder="#102" />
+        </Field>
+        <Field label="Complex / Community">
+          <Input value={form.complex} onChange={(e) => set("complex", e.target.value)} placeholder="Jetty East" />
+        </Field>
+        <Field label="List price *">
+          <Input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} placeholder="239000" />
+        </Field>
+        <Field label="Property type">
+          <Select value={form.propertyType} onChange={(e) => set("propertyType", e.target.value)}>
+            <option value="condo">Condo</option>
+            <option value="single-family">Single-family</option>
+            <option value="townhome">Townhome</option>
+            <option value="multi-family">Multi-family</option>
+            <option value="other">Other</option>
+          </Select>
+        </Field>
+        <Field label="Beds">
+          <Input type="number" value={form.beds} onChange={(e) => set("beds", e.target.value)} placeholder="2" />
+        </Field>
+        <Field label="Baths">
+          <Input type="number" step="0.5" value={form.baths} onChange={(e) => set("baths", e.target.value)} placeholder="2" />
+        </Field>
+        <Field label="Sq ft">
+          <Input type="number" value={form.sqft} onChange={(e) => set("sqft", e.target.value)} placeholder="950" />
+        </Field>
+        <Field label="HOA / mo">
+          <Input type="number" value={form.hoaMonthly} onChange={(e) => set("hoaMonthly", e.target.value)} placeholder="500" />
+        </Field>
+        <Field label="Days on market">
+          <Input type="number" value={form.daysOnMarket} onChange={(e) => set("daysOnMarket", e.target.value)} placeholder="45" />
+        </Field>
+        <Field label="Year built">
+          <Input type="number" value={form.yearBuilt} onChange={(e) => set("yearBuilt", e.target.value)} placeholder="1998" />
+        </Field>
+        <Field label={`Location tier (${city.anchorLabel})`}>
+          <Select value={form.tier} onChange={(e) => set("tier", e.target.value)}>
+            {city.tiers.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="STR status">
+          <Select value={form.strStatus} onChange={(e) => set("strStatus", e.target.value)}>
+            <option value="unknown">Unknown — verify</option>
+            <option value="allowed">Allowed</option>
+            <option value="banned">Banned</option>
+          </Select>
+        </Field>
+        <div className="col-span-2">
+          <Field label="Zillow URL (optional)">
+            <Input value={form.zillowUrl} onChange={(e) => set("zillowUrl", e.target.value)} placeholder="https://www.zillow.com/..." />
+          </Field>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-1">
+        <Button onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" onClick={onSubmit}>
+          <Plus size={16} /> Add property
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---- Budget search ---------------------------------------------------------
+
+function SearchPanel({
+  city,
+  project,
+  onAdd,
+  onClose,
+}: {
+  city: CityConfig;
+  project: Project;
+  onAdd: (props: Partial<Property>[]) => void;
+  onClose: () => void;
+}) {
+  const [params, setParams] = useState({
+    minPrice: project.budgetMin ? String(project.budgetMin) : "",
+    maxPrice: project.budgetMax ? String(project.budgetMax) : "",
+    bedrooms: "",
+    propertyType: "" as "" | PropertyType,
+  });
+  const [busy, setBusy] = useState(false);
+  const [results, setResults] = useState<ListingSearchResult[] | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [err, setErr] = useState("");
+
+  async function run() {
+    setBusy(true);
+    setErr("");
+    setResults(null);
+    try {
+      const res = await fetch("/api/rentcast/listings", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...keyHeaders() },
+        body: JSON.stringify({
+          city: city.name,
+          state: city.state,
+          minPrice: params.minPrice ? Number(params.minPrice) : undefined,
+          maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+          bedrooms: params.bedrooms ? Number(params.bedrooms) : undefined,
+          propertyType: params.propertyType || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setErr(data.message || "Search failed. Add a RentCast key in Settings.");
+        return;
+      }
+      setResults(data.results || []);
+      setSelected(new Set());
+    } catch {
+      setErr("Search failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggle(i: number) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(i)) n.delete(i);
+      else n.add(i);
+      return n;
+    });
+  }
+
+  function addSelected() {
+    if (!results) return;
+    const props: Partial<Property>[] = [...selected].map((i) => {
+      const r = results[i];
+      return {
+        cityKey: city.key,
+        address: r.address,
+        price: r.price,
+        beds: r.beds,
+        baths: r.baths,
+        sqft: r.sqft,
+        propertyType: r.propertyType ?? "other",
+        yearBuilt: r.yearBuilt,
+        daysOnMarket: r.daysOnMarket,
+        hoaMonthly: r.hoaMonthly,
+        tier: city.tiers[0]?.key,
+        strStatus: "unknown" as const,
+        rentOverride: r.rentEstimate,
+      };
+    });
+    onAdd(props);
+    onClose();
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <p className="mb-2 text-xs text-slate-500">
+          Find active for-sale listings in {city.name}, {city.state} within your budget (via RentCast). Requires a RentCast key.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Field label="Min price">
+            <Input type="number" value={params.minPrice} onChange={(e) => setParams((p) => ({ ...p, minPrice: e.target.value }))} placeholder="200000" />
+          </Field>
+          <Field label="Max price">
+            <Input type="number" value={params.maxPrice} onChange={(e) => setParams((p) => ({ ...p, maxPrice: e.target.value }))} placeholder="350000" />
+          </Field>
+          <Field label="Min beds">
+            <Input type="number" value={params.bedrooms} onChange={(e) => setParams((p) => ({ ...p, bedrooms: e.target.value }))} placeholder="2" />
+          </Field>
+          <Field label="Type">
+            <Select value={params.propertyType} onChange={(e) => setParams((p) => ({ ...p, propertyType: e.target.value as PropertyType }))}>
+              <option value="">Any</option>
+              <option value="condo">Condo</option>
+              <option value="single-family">Single-family</option>
+              <option value="townhome">Townhome</option>
+            </Select>
+          </Field>
+        </div>
+        <div className="mt-3 flex items-center gap-3">
+          <Button variant="primary" onClick={run} disabled={busy}>
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Search listings
+          </Button>
+          {err && <span className="text-xs text-red-600">{err}</span>}
+        </div>
+      </div>
+
+      {results && (
+        <div>
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="text-slate-600">
+              {results.length} result{results.length !== 1 ? "s" : ""} · {selected.size} selected
+            </span>
+            <Button variant="primary" size="sm" onClick={addSelected} disabled={selected.size === 0}>
+              <Plus size={14} /> Add {selected.size || ""} selected
+            </Button>
+          </div>
+          <div className="max-h-72 space-y-1.5 overflow-y-auto scroll-thin pr-1">
+            {results.length === 0 && <p className="py-6 text-center text-sm text-slate-400">No listings matched.</p>}
+            {results.map((r, i) => (
+              <button
+                key={i}
+                onClick={() => toggle(i)}
+                className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition ${
+                  selected.has(i) ? "border-teal-400 bg-teal-50" : "border-slate-200 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-slate-800">{r.address}</div>
+                  <div className="text-xs text-slate-500">
+                    {bedsLabel(r.beds, r.baths)}
+                    {r.sqft ? ` · ${r.sqft.toLocaleString()} sqft` : ""}
+                    {r.daysOnMarket ? ` · ${r.daysOnMarket} DOM` : ""}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="font-semibold text-slate-900">{usd(r.price)}</span>
+                  {selected.has(i) && <Badge tone="teal">✓</Badge>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
