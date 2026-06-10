@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardPaste, PencilLine, Search, Sparkles, Loader2, Plus } from "lucide-react";
+import { ClipboardPaste, PencilLine, Search, Sparkles, Loader2, Plus, Link2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { Button, Modal, Field, Input, Select, Textarea, Badge, Spinner } from "./ui";
 import { keyHeaders } from "@/lib/keys";
 import { usd, bedsLabel } from "@/lib/format";
 import type { CityConfig, Property, PropertyType, ExtractedListing, ListingSearchResult, Project } from "@/lib/types";
 
-type Mode = "manual" | "paste" | "search";
+type Mode = "manual" | "paste" | "bulk" | "search";
 
 const BLANK = {
   address: "",
@@ -85,13 +85,15 @@ export function AddPropertyModal({
       <div className="mb-4 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
         <ModeBtn icon={<PencilLine size={15} />} label="Manual" active={mode === "manual"} onClick={() => setMode("manual")} />
         <ModeBtn icon={<ClipboardPaste size={15} />} label="Smart paste" active={mode === "paste"} onClick={() => setMode("paste")} />
+        <ModeBtn icon={<Link2 size={15} />} label="Bulk links" active={mode === "bulk"} onClick={() => setMode("bulk")} />
         <ModeBtn icon={<Search size={15} />} label="Budget search" active={mode === "search"} onClick={() => setMode("search")} />
       </div>
 
       {mode === "paste" && <PastePanel form={form} setField={set} />}
+      {mode === "bulk" && <BulkPanel city={city} onAdd={onAdd} onClose={onClose} />}
       {mode === "search" && <SearchPanel city={city} project={project} onAdd={onAdd} onClose={onClose} />}
 
-      {mode !== "search" && (
+      {(mode === "manual" || mode === "paste") && (
         <ManualForm city={city} form={form} set={set} onSubmit={submitManual} onCancel={onClose} />
       )}
     </Modal>
@@ -204,6 +206,188 @@ function PastePanel({ form, setField }: { form: FormState; setField: (k: keyof F
         )}
       </div>
       {form.address && <p className="text-xs text-slate-500">Parsed into the form below ↓</p>}
+    </div>
+  );
+}
+
+// ---- Bulk URL import -------------------------------------------------------
+
+type BulkRow = { url: string; status: "ok" | "blocked" | "error"; listing?: ExtractedListing; message?: string };
+
+function BulkPanel({ city, onAdd, onClose }: { city: CityConfig; onAdd: (p: Partial<Property>[]) => void; onClose: () => void }) {
+  const [text, setText] = useState("");
+  const [running, setRunning] = useState(false);
+  const [results, setResults] = useState<BulkRow[] | null>(null);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+
+  function parseUrls(): string[] {
+    return Array.from(
+      new Set(
+        text
+          .split(/\s+/)
+          .map((s) => s.trim())
+          .filter((u) => /^https?:\/\//i.test(u))
+      )
+    );
+  }
+  const urlCount = parseUrls().length;
+
+  async function run() {
+    const urls = parseUrls();
+    if (!urls.length) return;
+    setRunning(true);
+    setResults([]);
+    setProgress({ done: 0, total: urls.length });
+    const rows: BulkRow[] = [];
+    for (let i = 0; i < urls.length; i++) {
+      try {
+        const res = await fetch("/api/import-url", {
+          method: "POST",
+          headers: { "content-type": "application/json", ...keyHeaders() },
+          body: JSON.stringify({ url: urls[i] }),
+        });
+        const data = await res.json();
+        if (data.ok && data.listing) rows.push({ url: urls[i], status: "ok", listing: data.listing });
+        else rows.push({ url: urls[i], status: data.blocked ? "blocked" : "error", message: data.message });
+      } catch {
+        rows.push({ url: urls[i], status: "error", message: "Request failed" });
+      }
+      setProgress({ done: i + 1, total: urls.length });
+      setResults([...rows]);
+    }
+    setSelected(new Set(rows.map((r, idx) => (r.status === "ok" ? idx : -1)).filter((i) => i >= 0)));
+    setRunning(false);
+  }
+
+  function toggle(i: number) {
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(i)) n.delete(i);
+      else n.add(i);
+      return n;
+    });
+  }
+
+  function addSelected() {
+    if (!results) return;
+    const props: Partial<Property>[] = [...selected].map((i) => {
+      const l = results[i].listing!;
+      return {
+        cityKey: city.key,
+        address: l.address || "Unknown",
+        unit: l.unit,
+        complex: l.complex,
+        price: l.price ?? 0,
+        beds: l.beds ?? 2,
+        baths: l.baths ?? 2,
+        sqft: l.sqft,
+        propertyType: l.propertyType ?? "condo",
+        yearBuilt: l.yearBuilt,
+        daysOnMarket: l.daysOnMarket,
+        hoaMonthly: l.hoaMonthly,
+        tier: city.tiers[0]?.key,
+        zillowUrl: l.zillowUrl,
+        strStatus: "unknown" as const,
+      };
+    });
+    onAdd(props);
+    onClose();
+  }
+
+  const okCount = results?.filter((r) => r.status === "ok").length ?? 0;
+  const blockedCount = results?.filter((r) => r.status === "blocked").length ?? 0;
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <Field
+          label="Paste listing links — one per line"
+          hint="Works with Zillow, Redfin, Realtor.com, etc. Needs an Anthropic key (it reads each page and extracts the details)."
+        >
+          <Textarea
+            rows={5}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.zillow.com/homedetails/...\nhttps://www.redfin.com/FL/..."}
+          />
+        </Field>
+        <div className="mt-2 flex items-center gap-3">
+          <Button variant="primary" onClick={run} disabled={running || urlCount === 0}>
+            {running ? <Loader2 size={16} className="animate-spin" /> : <Link2 size={16} />}
+            {running ? `Importing ${progress.done}/${progress.total}…` : `Import ${urlCount || ""} link${urlCount === 1 ? "" : "s"}`}
+          </Button>
+          {!running && results && (
+            <span className="text-xs text-slate-500">
+              {okCount} read{blockedCount ? ` · ${blockedCount} blocked` : ""}
+            </span>
+          )}
+        </div>
+        <p className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-700">
+          <AlertTriangle size={13} className="mt-px shrink-0" />
+          Zillow blocks automated reads from servers, so some links may come back &quot;blocked.&quot; For those, open the listing,
+          select-all the page text, and use the <b>Smart paste</b> tab. Redfin / Realtor.com links usually read fine.
+        </p>
+      </div>
+
+      {results && results.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="text-slate-600">{selected.size} selected to add</span>
+            <Button variant="primary" size="sm" onClick={addSelected} disabled={selected.size === 0}>
+              <Plus size={14} /> Add {selected.size || ""} propert{selected.size === 1 ? "y" : "ies"}
+            </Button>
+          </div>
+          <div className="max-h-72 space-y-1.5 overflow-y-auto scroll-thin pr-1">
+            {results.map((r, i) => (
+              <BulkRowItem key={i} row={r} selected={selected.has(i)} onToggle={() => r.status === "ok" && toggle(i)} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BulkRowItem({ row, selected, onToggle }: { row: BulkRow; selected: boolean; onToggle: () => void }) {
+  const l = row.listing;
+  const short = row.url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 48);
+  if (row.status === "ok" && l) {
+    return (
+      <button
+        onClick={onToggle}
+        className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition ${
+          selected ? "border-teal-400 bg-teal-50" : "border-slate-200 bg-white hover:bg-slate-50"
+        }`}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+          <div className="min-w-0">
+            <div className="truncate font-medium text-slate-800">
+              {l.address || "Listing"} {l.unit || ""}
+            </div>
+            <div className="text-xs text-slate-500">
+              {l.price ? usd(l.price) : "price ?"}
+              {l.beds !== undefined ? ` · ${bedsLabel(l.beds, l.baths)}` : ""}
+              {l.sqft ? ` · ${l.sqft.toLocaleString()} sqft` : ""}
+            </div>
+          </div>
+        </div>
+        {selected && <Badge tone="teal">✓</Badge>}
+      </button>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+      {row.status === "blocked" ? (
+        <AlertTriangle size={15} className="shrink-0 text-amber-500" />
+      ) : (
+        <XCircle size={15} className="shrink-0 text-red-400" />
+      )}
+      <div className="min-w-0">
+        <div className="truncate text-slate-600">{short}…</div>
+        <div className="text-slate-400">{row.status === "blocked" ? "Blocked — use Smart paste for this one" : row.message || "Couldn't read"}</div>
+      </div>
     </div>
   );
 }
