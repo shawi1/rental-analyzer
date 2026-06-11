@@ -176,7 +176,15 @@ export function ProjectView({ id }: { id: string }) {
         {tab === "overview" &&
           (props.length === 0 ? (
             <EmptyState title="No properties yet">
-              Add your saved Zillow listings (manual, smart paste, or budget search) to start the analysis.
+              <p>
+                Add your saved listings four ways — type them in <b>manually</b>, <b>smart-paste</b> a listing&apos;s text,
+                drop in a batch of <b>bulk links</b>, or <b>budget-search</b> for new ones.
+              </p>
+              <div className="mt-3">
+                <Button variant="primary" onClick={() => setAddOpen(true)}>
+                  <Plus size={16} /> Add property
+                </Button>
+              </div>
             </EmptyState>
           ) : (
             <PropertyTable properties={props} city={city} project={project} onOpen={(p) => setDetailId(p.id)} />
