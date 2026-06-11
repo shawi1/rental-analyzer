@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sparkles, Loader2, Trash2, ExternalLink, CheckCircle2, XCircle, HelpCircle } from "lucide-react";
 import { Button, Modal, Badge, Stat, Select, Textarea, Field } from "./ui";
 import { SeasonalChart } from "./charts";
+import { StrategyPanel } from "./StrategyPanel";
 import { keyHeaders } from "@/lib/keys";
 import { usd, pct, num, bedsLabel, MONTHS } from "@/lib/format";
 import { tierFor } from "@/lib/cities";
@@ -312,6 +313,12 @@ export function PropertyDetail({
             </div>
           </section>
         )}
+
+        {/* Forecast & strategy (our owned data+ML service) */}
+        <section>
+          <h3 className="mb-2 text-sm font-semibold text-slate-800">Forecast &amp; Strategy <span className="font-normal text-slate-400">· free, owned data</span></h3>
+          <StrategyPanel property={property} city={city} project={project} />
+        </section>
 
         {/* Rent override + notes */}
         <section className="grid gap-3 sm:grid-cols-2">

@@ -28,6 +28,35 @@ const BLANK = {
 };
 type FormState = typeof BLANK;
 
+// Map a rentaliq-data (MLS) listing row to the app's ListingSearchResult shape.
+function mapServiceListing(r: Record<string, unknown>): ListingSearchResult {
+  const sub = String(r.property_subtype || r.property_type || "").toLowerCase();
+  const pt: PropertyType = sub.includes("condo")
+    ? "condo"
+    : sub.includes("town")
+      ? "townhome"
+      : sub.includes("single")
+        ? "single-family"
+        : sub.includes("multi")
+          ? "multi-family"
+          : "other";
+  return {
+    address: String(r.address || "Unknown"),
+    zip: (r.zip as string) || undefined,
+    price: Number(r.price) || 0,
+    beds: Number(r.beds) || 0,
+    baths: Number(r.baths) || 0,
+    sqft: r.sqft ? Number(r.sqft) : undefined,
+    propertyType: pt,
+    yearBuilt: r.year_built ? Number(r.year_built) : undefined,
+    daysOnMarket: r.days_on_market ? Number(r.days_on_market) : undefined,
+    hoaMonthly: r.hoa_monthly ? Number(r.hoa_monthly) : undefined,
+    source: "MLS",
+    lat: r.lat ? Number(r.lat) : undefined,
+    lng: r.lng ? Number(r.lng) : undefined,
+  };
+}
+
 export function AddPropertyModal({
   open,
   onClose,
@@ -513,29 +542,46 @@ function SearchPanel({
   const [results, setResults] = useState<ListingSearchResult[] | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [err, setErr] = useState("");
-  const [source, setSource] = useState<"redfin" | "rentcast">("rentcast");
+  const [source, setSource] = useState<"ours" | "rentcast" | "redfin">("ours");
 
   async function run() {
     setBusy(true);
     setErr("");
     setResults(null);
     try {
-      const endpoint = source === "redfin" ? "/api/redfin/listings" : "/api/rentcast/listings";
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "content-type": "application/json", ...keyHeaders() },
-        body: JSON.stringify({
-          city: city.name,
-          state: city.state,
-          minPrice: params.minPrice ? Number(params.minPrice) : undefined,
-          maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-          bedrooms: params.bedrooms ? Number(params.bedrooms) : undefined,
-          propertyType: params.propertyType || undefined,
-        }),
-      });
-      const data = await res.json();
+      let data: { error?: string; message?: string; results?: ListingSearchResult[] };
+      if (source === "ours") {
+        // Our owned microservice (MLS) — GET via the proxy.
+        const qs = new URLSearchParams({ city: city.name, state: city.state });
+        if (params.minPrice) qs.set("min_price", params.minPrice);
+        if (params.maxPrice) qs.set("max_price", params.maxPrice);
+        if (params.bedrooms) qs.set("beds", params.bedrooms);
+        if (params.propertyType) qs.set("property_type", params.propertyType);
+        const res = await fetch(`/api/data/listings?${qs.toString()}`);
+        const raw = await res.json();
+        data = { error: raw.error, message: raw.message, results: (raw.results || []).map(mapServiceListing) };
+      } else {
+        const endpoint = source === "redfin" ? "/api/redfin/listings" : "/api/rentcast/listings";
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "content-type": "application/json", ...keyHeaders() },
+          body: JSON.stringify({
+            city: city.name,
+            state: city.state,
+            minPrice: params.minPrice ? Number(params.minPrice) : undefined,
+            maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+            bedrooms: params.bedrooms ? Number(params.bedrooms) : undefined,
+            propertyType: params.propertyType || undefined,
+          }),
+        });
+        data = await res.json();
+      }
       if (data.error) {
-        setErr(data.message || (source === "rentcast" ? "Search failed. Add a RentCast key in Settings." : "Search failed."));
+        const msg =
+          data.error === "mls-not-configured"
+            ? "Our MLS feed isn't connected yet (needs your RESO credentials). Use RentCast or Redfin for now."
+            : data.message || (source === "rentcast" ? "Search failed. Add a RentCast key in Settings." : "Search failed.");
+        setErr(msg);
         setResults([]);
         return;
       }
@@ -591,6 +637,12 @@ function SearchPanel({
           </p>
           <div className="flex gap-1 rounded-lg bg-slate-200/70 p-0.5 text-xs">
             <button
+              onClick={() => setSource("ours")}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "ours" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
+            >
+              Our API · MLS
+            </button>
+            <button
               onClick={() => setSource("rentcast")}
               className={`rounded-md px-2.5 py-1 font-medium transition ${source === "rentcast" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
             >
@@ -605,9 +657,11 @@ function SearchPanel({
           </div>
         </div>
         <p className="mb-2 text-[11px] text-slate-400">
-          {source === "redfin"
-            ? "Redfin: free & unlimited, but experimental — Redfin often blocks server requests, so this may fail on the live site (works best running locally). Falls back to RentCast."
-            : "RentCast: reliable, uses 1 of your 50 free monthly requests per search (results are cached, so re-opening costs nothing)."}
+          {source === "ours"
+            ? "Our API: free & owned, straight from the licensed MLS feed (most reliable + complete). Lights up once your RESO credentials are connected to the rentaliq-data service."
+            : source === "redfin"
+              ? "Redfin: free & unlimited, but experimental — Redfin often blocks server requests, so this may fail on the live site (works best running locally). Falls back to RentCast."
+              : "RentCast: reliable, uses 1 of your 50 free monthly requests per search (results are cached, so re-opening costs nothing)."}
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="Min price">
