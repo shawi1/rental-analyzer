@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       const x = r as Record<string, unknown>;
       return {
         address: (x.formattedAddress as string) || (x.addressLine1 as string) || "Unknown address",
+        zip: (x.zipCode as string) || undefined,
         price: Number(x.price) || 0,
         beds: Number(x.bedrooms) || 0,
         baths: Number(x.bathrooms) || 0,

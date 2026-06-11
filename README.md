@@ -66,7 +66,14 @@ AI and listing-search features. Add them either in the in-app **Settings** page
 | Key | Powers | Where to get it |
 |-----|--------|-----------------|
 | `ANTHROPIC_API_KEY` | AI STR verification, smart paste, report text | console.anthropic.com (billing required) |
-| `RENTCAST_API_KEY` | Budget listing search, value/rent estimates | app.rentcast.io (free tier) |
+| `RENTCAST_API_KEY` | Budget listing search, value/rent estimates | app.rentcast.io (free tier, 50/mo) |
+| `HUD_API_TOKEN` | Free **unlimited** long-term rent baseline (Fair Market Rents) | huduser.gov (free) |
+
+> **Budget search sources:** RentCast (reliable, 50/mo) is the default. A free
+> **Redfin** option exists too, but Redfin blocks automated requests from
+> servers, so it's experimental and usually only works running locally.
+> **Long-term rent** can be pulled free + unlimited from **HUD**, or per-property
+> from RentCast.
 
 ## Deploying free (Vercel)
 

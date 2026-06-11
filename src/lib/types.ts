@@ -138,6 +138,7 @@ export interface Property {
   address: string;
   unit?: string;
   complex?: string;
+  zip?: string;
   price: number;
   beds: number; // 0 = studio
   baths: number;
@@ -221,6 +222,7 @@ export interface ExtractedListing {
   address?: string;
   unit?: string;
   complex?: string;
+  zip?: string;
   price?: number;
   beds?: number;
   baths?: number;
@@ -234,6 +236,7 @@ export interface ExtractedListing {
 
 export interface ListingSearchResult {
   address: string;
+  zip?: string;
   price: number;
   beds: number;
   baths: number;

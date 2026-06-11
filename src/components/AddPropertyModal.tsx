@@ -13,6 +13,7 @@ const BLANK = {
   address: "",
   unit: "",
   complex: "",
+  zip: "",
   price: "",
   beds: "2",
   baths: "2",
@@ -58,6 +59,7 @@ export function AddPropertyModal({
       address: form.address.trim(),
       unit: form.unit.trim() || undefined,
       complex: form.complex.trim() || undefined,
+      zip: form.zip.trim() || undefined,
       price: Number(form.price),
       beds: Number(form.beds),
       baths: Number(form.baths),
@@ -165,6 +167,7 @@ function PastePanel({ form, setField }: { form: FormState; setField: (k: keyof F
       if (data.address) setField("address", data.address);
       if (data.unit) setField("unit", data.unit);
       if (data.complex) setField("complex", data.complex);
+      if (data.zip) setField("zip", data.zip);
       if (data.price) setField("price", String(data.price));
       if (data.beds !== undefined) setField("beds", String(data.beds));
       if (data.baths !== undefined) setField("baths", String(data.baths));
@@ -442,6 +445,9 @@ function ManualForm({
         <Field label="Sq ft">
           <Input type="number" value={form.sqft} onChange={(e) => set("sqft", e.target.value)} placeholder="950" />
         </Field>
+        <Field label="ZIP code">
+          <Input value={form.zip} onChange={(e) => set("zip", e.target.value)} placeholder="32541" />
+        </Field>
         <Field label="HOA / mo">
           <Input type="number" value={form.hoaMonthly} onChange={(e) => set("hoaMonthly", e.target.value)} placeholder="500" />
         </Field>
@@ -507,13 +513,15 @@ function SearchPanel({
   const [results, setResults] = useState<ListingSearchResult[] | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [err, setErr] = useState("");
+  const [source, setSource] = useState<"redfin" | "rentcast">("rentcast");
 
   async function run() {
     setBusy(true);
     setErr("");
     setResults(null);
     try {
-      const res = await fetch("/api/rentcast/listings", {
+      const endpoint = source === "redfin" ? "/api/redfin/listings" : "/api/rentcast/listings";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "content-type": "application/json", ...keyHeaders() },
         body: JSON.stringify({
@@ -527,7 +535,8 @@ function SearchPanel({
       });
       const data = await res.json();
       if (data.error) {
-        setErr(data.message || "Search failed. Add a RentCast key in Settings.");
+        setErr(data.message || (source === "rentcast" ? "Search failed. Add a RentCast key in Settings." : "Search failed."));
+        setResults([]);
         return;
       }
       setResults(data.results || []);
@@ -555,6 +564,7 @@ function SearchPanel({
       return {
         cityKey: city.key,
         address: r.address,
+        zip: r.zip,
         price: r.price,
         beds: r.beds,
         baths: r.baths,
@@ -575,8 +585,29 @@ function SearchPanel({
   return (
     <div className="space-y-3">
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-        <p className="mb-2 text-xs text-slate-500">
-          Find active for-sale listings in {city.name}, {city.state} within your budget (via RentCast). Requires a RentCast key.
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-slate-500">
+            Find active for-sale listings in {city.name}, {city.state} within your budget.
+          </p>
+          <div className="flex gap-1 rounded-lg bg-slate-200/70 p-0.5 text-xs">
+            <button
+              onClick={() => setSource("rentcast")}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "rentcast" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
+            >
+              RentCast
+            </button>
+            <button
+              onClick={() => setSource("redfin")}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "redfin" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
+            >
+              Redfin · free
+            </button>
+          </div>
+        </div>
+        <p className="mb-2 text-[11px] text-slate-400">
+          {source === "redfin"
+            ? "Redfin: free & unlimited, but experimental — Redfin often blocks server requests, so this may fail on the live site (works best running locally). Falls back to RentCast."
+            : "RentCast: reliable, uses 1 of your 50 free monthly requests per search (results are cached, so re-opening costs nothing)."}
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="Min price">

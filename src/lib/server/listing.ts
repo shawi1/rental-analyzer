@@ -77,6 +77,7 @@ Return ONLY a JSON object with any fields you can confidently determine (omit un
   "address": "street address",
   "unit": "unit/apt number if separate",
   "complex": "building or community name",
+  "zip": "5-digit ZIP code",
   "price": number (list price in dollars, no commas),
   "beds": number (0 for studio),
   "baths": number,

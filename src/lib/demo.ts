@@ -65,6 +65,7 @@ export function createDemoProject(): Project {
     const base: Property = {
       id: uid(),
       cityKey: city.key,
+      zip: "32541",
       address: partial.address!,
       beds: partial.beds ?? 1,
       baths: partial.baths ?? 1,
@@ -122,6 +123,7 @@ export function createKissimmeeListProject(): Project {
     const base: Property = {
       id: uid(),
       cityKey: city.key,
+      zip: "34747",
       address: partial.address!,
       beds: partial.beds ?? 2,
       baths: partial.baths ?? 2,

@@ -31,6 +31,8 @@ export function PropertyDetail({
   const [scen, setScen] = useState<ScenarioKey>("mid");
   const [verifying, setVerifying] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState("");
+  const [rentBusy, setRentBusy] = useState<"" | "hud" | "rentcast">("");
+  const [rentMsg, setRentMsg] = useState("");
 
   const tier = tierFor(city, property.tier);
   const str = property.strAnalysis;
@@ -67,6 +69,75 @@ export function PropertyDetail({
       setVerifyMsg("Verification failed.");
     } finally {
       setVerifying(false);
+    }
+  }
+
+  async function fetchHudRent() {
+    let zip = property.zip || property.address.match(/\b(\d{5})\b/)?.[1] || "";
+    if (!zip) {
+      const e = window.prompt("ZIP code for the HUD rent lookup?");
+      if (!e) return;
+      zip = e.trim();
+    }
+    setRentBusy("hud");
+    setRentMsg("");
+    try {
+      const res = await fetch("/api/hud/fmr", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...keyHeaders() },
+        body: JSON.stringify({ zip, beds: property.beds }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setRentMsg(data.message || "HUD lookup failed.");
+        return;
+      }
+      if (data.rent) {
+        onUpdate({ ...property, zip, rentOverride: Math.round(data.rent), rentEstimateSource: `HUD FMR ${data.year ?? ""}`.trim() });
+        setRentMsg(`HUD FMR: $${Math.round(data.rent).toLocaleString()}/mo (${data.areaName ?? zip})`);
+      } else setRentMsg("HUD returned no rent for that ZIP / bedroom count.");
+    } catch {
+      setRentMsg("HUD lookup failed.");
+    } finally {
+      setRentBusy("");
+    }
+  }
+
+  async function fetchRentcastRent() {
+    setRentBusy("rentcast");
+    setRentMsg("");
+    const rcType: Record<string, string> = {
+      condo: "Condo",
+      townhome: "Townhouse",
+      "single-family": "Single Family",
+      "multi-family": "Multi-Family",
+    };
+    try {
+      const addr = `${property.address}${property.unit ? " " + property.unit : ""}${property.zip ? ", " + property.zip : ""}`;
+      const res = await fetch("/api/rentcast/value", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...keyHeaders() },
+        body: JSON.stringify({
+          address: addr,
+          propertyType: rcType[property.propertyType],
+          bedrooms: property.beds,
+          bathrooms: property.baths,
+          squareFootage: property.sqft,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setRentMsg(data.message || "RentCast lookup failed.");
+        return;
+      }
+      if (data.rent) {
+        onUpdate({ ...property, rentOverride: Math.round(data.rent), rentEstimateSource: "RentCast AVM" });
+        setRentMsg(`RentCast: $${Math.round(data.rent).toLocaleString()}/mo${data.value ? ` · est. value ~$${Number(data.value).toLocaleString()}` : ""}`);
+      } else setRentMsg("RentCast returned no rent estimate for this address.");
+    } catch {
+      setRentMsg("RentCast lookup failed.");
+    } finally {
+      setRentBusy("");
     }
   }
 
@@ -244,16 +315,27 @@ export function PropertyDetail({
 
         {/* Rent override + notes */}
         <section className="grid gap-3 sm:grid-cols-2">
-          <Field label="Manual monthly rent override" hint="Overrides the modeled long-term rent. Leave blank to use the model / RentCast.">
+          <Field label="Long-term monthly rent" hint="Used for the long-term analysis. Pull a free HUD baseline or a RentCast estimate, or type your own.">
             <input
               type="number"
+              key={property.rentOverride ?? "blank"}
               defaultValue={property.rentOverride ?? ""}
               onBlur={(e) =>
-                onUpdate({ ...property, rentOverride: e.target.value ? Number(e.target.value) : undefined })
+                onUpdate({ ...property, rentOverride: e.target.value ? Number(e.target.value) : undefined, rentEstimateSource: e.target.value ? "manual" : undefined })
               }
               placeholder="e.g. 2200"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none"
             />
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <Button size="sm" onClick={fetchHudRent} disabled={rentBusy !== ""}>
+                {rentBusy === "hud" ? <Loader2 size={13} className="animate-spin" /> : null} HUD (free)
+              </Button>
+              <Button size="sm" onClick={fetchRentcastRent} disabled={rentBusy !== ""}>
+                {rentBusy === "rentcast" ? <Loader2 size={13} className="animate-spin" /> : null} RentCast
+              </Button>
+              {property.rentEstimateSource && <span className="text-[11px] text-slate-400">source: {property.rentEstimateSource}</span>}
+            </div>
+            {rentMsg && <span className="mt-1 block text-[11px] text-teal-600">{rentMsg}</span>}
           </Field>
           <Field label="Notes">
             <Textarea

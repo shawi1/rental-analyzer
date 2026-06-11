@@ -81,6 +81,17 @@ export default function SettingsPage() {
               placeholder="..."
             />
           </Field>
+          <Field
+            label="HUD API token (free, unlimited)"
+            hint="Free U.S. government Fair Market Rent data — no usage limit. Powers the free long-term rent baseline. Get a token at huduser.gov."
+          >
+            <Input
+              type="password"
+              value={keys.hud ?? ""}
+              onChange={(e) => setKeys((k) => ({ ...k, hud: e.target.value }))}
+              placeholder="..."
+            />
+          </Field>
         </div>
 
         <div className="mt-4 flex items-center gap-3">
@@ -108,6 +119,14 @@ export default function SettingsPage() {
             className="inline-flex items-center gap-1 text-xs text-teal-700 hover:underline"
           >
             RentCast keys <ExternalLink size={12} />
+          </a>
+          <a
+            href="https://www.huduser.gov/portal/dataset/fmr-api.html"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-teal-700 hover:underline"
+          >
+            HUD token <ExternalLink size={12} />
           </a>
         </div>
 

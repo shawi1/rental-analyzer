@@ -5,13 +5,14 @@
 // (ANTHROPIC_API_KEY, RENTCAST_API_KEY) if a header is absent — so you can
 // either paste keys in Settings (per-browser) or set them in the deploy env.
 
-export type ApiKeyName = "anthropic" | "rentcast";
+export type ApiKeyName = "anthropic" | "rentcast" | "hud";
 
 const STORAGE_KEY = "rentaliq:apikeys";
 
 export interface ApiKeys {
   anthropic?: string;
   rentcast?: string;
+  hud?: string;
 }
 
 export function loadKeys(): ApiKeys {
@@ -34,5 +35,6 @@ export function keyHeaders(): Record<string, string> {
   const h: Record<string, string> = {};
   if (k.anthropic) h["x-anthropic-key"] = k.anthropic;
   if (k.rentcast) h["x-rentcast-key"] = k.rentcast;
+  if (k.hud) h["x-hud-key"] = k.hud;
   return h;
 }
