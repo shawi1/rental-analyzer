@@ -102,6 +102,7 @@ const kissimmee: CityConfig = {
   seeded: true,
   // Modeled from doc ranges (3br $45-80k, 4-6br $65-130k) — refine with AirDNA.
   benchmarks: [
+    { beds: 1, grossYr: 25000, occ: 53, adr: 130 },
     { beds: 2, grossYr: 38000, occ: 55, adr: 190 },
     { beds: 3, grossYr: 58000, occ: 57, adr: 245 },
     { beds: 4, grossYr: 78000, occ: 58, adr: 300 },
