@@ -80,3 +80,60 @@ export function createDemoProject(): Project {
   saveProject(project);
   return project;
 }
+
+// ---------------------------------------------------------------------------
+// Kissimmee — Jason's real Legacy Dunes shortlist (June 2026). All units are in
+// the gated Legacy Dunes resort (4 mi to Disney), which markets "no rental
+// restrictions" — STR allowed, community pool/amenities (standard-pool tier).
+// ---------------------------------------------------------------------------
+
+const LEGACY_NOTE =
+  "Legacy Dunes — gated, STR-friendly resort community ~4 mi from Disney's main gate (lagoon pool, gym, tennis/basketball, clubhouse). Listings advertise 'no rental restrictions.' Confirm the current HOA STR policy and any minimum-stay rule before an offer.";
+
+const KISSIMMEE_PROPS: Partial<Property>[] = [
+  { address: "3174 Feltrim Pl", unit: "#201", complex: "Legacy Dunes", price: 245000, beds: 3, baths: 2, sqft: 1269, propertyType: "condo", tier: "standard-pool", hoaMonthly: 470, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8816 Dunes Ct", unit: "#303", complex: "Legacy Dunes", price: 250000, beds: 2, baths: 2, sqft: 1110, propertyType: "condo", tier: "standard-pool", hoaMonthly: 455, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8815 Dunes Ct", unit: "#305", complex: "Legacy Dunes", price: 219900, beds: 2, baths: 2, sqft: 1048, propertyType: "condo", tier: "standard-pool", hoaMonthly: 450, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8836 Dunes Ct", unit: "#206", complex: "Legacy Dunes", price: 209900, beds: 2, baths: 2, sqft: 1048, propertyType: "condo", tier: "standard-pool", hoaMonthly: 450, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8815 Dunes Ct", unit: "#105", complex: "Legacy Dunes", price: 200000, beds: 2, baths: 2, sqft: 1048, propertyType: "condo", tier: "standard-pool", hoaMonthly: 450, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8901 Legacy Ct", unit: "#201", complex: "Legacy Dunes", price: 199900, beds: 2, baths: 1, sqft: 901, propertyType: "condo", tier: "standard-pool", hoaMonthly: 430, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8824 Dunes Ct", unit: "#103", complex: "Legacy Dunes", price: 175000, beds: 1, baths: 1, sqft: 636, propertyType: "condo", tier: "standard-pool", hoaMonthly: 400, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+  { address: "8929 Legacy Ct", unit: "#206", complex: "Legacy Dunes", price: 175000, beds: 1, baths: 1, sqft: 636, propertyType: "condo", tier: "standard-pool", hoaMonthly: 400, strStatus: "allowed", strConfidence: "medium", strNote: LEGACY_NOTE },
+];
+
+export function createKissimmeeListProject(): Project {
+  const city = SEEDED_CITIES.find((c) => c.key === "kissimmee-fl")!;
+  const now = Date.now();
+  const project: Project = {
+    id: uid(),
+    name: "Kissimmee — Dad's Legacy Dunes list (Jun 2026)",
+    cityKey: city.key,
+    strategy: "both",
+    financing: { ...DEFAULT_FINANCING },
+    budgetMin: 175000,
+    budgetMax: 260000,
+    properties: [],
+    notes:
+      "From Jason's email — comparing Kissimmee STR vs Destin for easier self-management (45-60 min away). All units are in the Legacy Dunes resort. STR allowed; verify each HOA before offer.",
+    createdAt: now,
+    updatedAt: now,
+  };
+  project.properties = KISSIMMEE_PROPS.map((partial) => {
+    const base: Property = {
+      id: uid(),
+      cityKey: city.key,
+      address: partial.address!,
+      beds: partial.beds ?? 2,
+      baths: partial.baths ?? 2,
+      price: partial.price ?? 0,
+      propertyType: "condo",
+      strStatus: partial.strStatus ?? "unknown",
+      createdAt: now,
+      updatedAt: now,
+      ...partial,
+    };
+    return computeProperty(city, base, project);
+  });
+  saveProject(project);
+  return project;
+}

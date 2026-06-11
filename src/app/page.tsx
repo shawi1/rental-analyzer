@@ -7,7 +7,7 @@ import { Plus, MapPin, Home as HomeIcon, Trash2, ArrowRight } from "lucide-react
 import { Button, Card, Badge, EmptyState, Modal, Field, Input, Select } from "@/components/ui";
 import { useProjects, useCities } from "@/lib/hooks";
 import { newProject, saveProject, deleteProject, DEFAULT_FINANCING } from "@/lib/storage";
-import { createDemoProject } from "@/lib/demo";
+import { createDemoProject, createKissimmeeListProject } from "@/lib/demo";
 import { usd } from "@/lib/format";
 
 const STRATEGY_LABEL: Record<string, string> = { str: "Short-term", ltr: "Long-term", both: "STR + Long-term" };
@@ -42,10 +42,9 @@ export default function HomePage() {
             Each project analyzes a set of properties in one market for STR &amp; long-term rental potential.
           </p>
         </div>
-        <div className="flex gap-2">
-          {projects.length === 0 && (
-            <Button onClick={() => router.push(`/project/${createDemoProject().id}`)}>Load Destin demo</Button>
-          )}
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => router.push(`/project/${createDemoProject().id}`)}>Destin sample</Button>
+          <Button onClick={() => router.push(`/project/${createKissimmeeListProject().id}`)}>Kissimmee sample</Button>
           <Button variant="primary" onClick={() => setOpen(true)}>
             <Plus size={16} /> New project
           </Button>
@@ -54,11 +53,15 @@ export default function HomePage() {
 
       {projects.length === 0 ? (
         <EmptyState title="No projects yet">
-          Create your first project, or{" "}
+          Create your first project, or load a sample —{" "}
           <button onClick={() => router.push(`/project/${createDemoProject().id}`)} className="font-medium text-teal-700 hover:underline">
-            load the Destin demo
+            Destin
           </button>{" "}
-          to see a finished analysis.
+          or{" "}
+          <button onClick={() => router.push(`/project/${createKissimmeeListProject().id}`)} className="font-medium text-teal-700 hover:underline">
+            Kissimmee (Dad&apos;s Legacy Dunes list)
+          </button>
+          .
         </EmptyState>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
