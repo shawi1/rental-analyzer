@@ -76,8 +76,8 @@ export function StrategyPanel({ property, city, project }: { property: Property;
 
   if (!data) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 p-4 text-center">
-        <p className="text-sm text-slate-600">
+      <div className="rounded-lg border border-dashed border-[var(--hairline)] bg-white/[0.03]/60 p-4 text-center">
+        <p className="text-sm text-[var(--fg-muted)]">
           Run our free forecasting + strategy engine (rent/value forecasts, 5-yr Monte Carlo return, deal score, market risk).
         </p>
         <div className="mt-3">
@@ -85,7 +85,7 @@ export function StrategyPanel({ property, city, project }: { property: Property;
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Run forecast &amp; strategy
           </Button>
         </div>
-        {err && <p className="mt-2 text-xs text-red-600">{err}</p>}
+        {err && <p className="mt-2 text-xs text-rose-400">{err}</p>}
       </div>
     );
   }
@@ -98,9 +98,9 @@ export function StrategyPanel({ property, city, project }: { property: Property;
     <div className="space-y-4">
       {/* Recommendation */}
       {deal && !deal.error && (
-        <div className="rounded-lg border border-teal-200 bg-teal-50/60 p-3">
+        <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/[0.08]/60 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-2 text-sm font-semibold text-teal-900">
+            <span className="flex items-center gap-2 text-sm font-semibold text-cyan-200">
               <Target size={16} /> {deal.recommendation}
             </span>
             <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function StrategyPanel({ property, city, project }: { property: Property;
               <Badge tone={deal.score >= 68 ? "green" : deal.score >= 50 ? "teal" : "red"}>Deal score {deal.score}</Badge>
             </div>
           </div>
-          {deal.why?.length > 0 && <p className="mt-1 text-xs text-teal-800">{deal.why.join(" · ")}</p>}
+          {deal.why?.length > 0 && <p className="mt-1 text-xs text-cyan-300">{deal.why.join(" · ")}</p>}
         </div>
       )}
 
@@ -146,29 +146,29 @@ export function StrategyPanel({ property, city, project }: { property: Property;
 
       {/* Market */}
       {market && !market.error && (
-        <div className="rounded-lg border border-slate-200 p-3">
+        <div className="rounded-lg border border-[var(--hairline)] p-3">
           <div className="mb-1.5 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-sm font-medium text-slate-800">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-[var(--fg)]">
               <TrendIcon trend={market.value?.momentum?.trend} /> {market.metro || "Market"} momentum
             </span>
             <Badge tone={market.risk_level === "elevated" ? "amber" : "slate"}>{market.risk_level} risk</Badge>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[var(--fg-muted)]">
             <div>
               Rent YoY:{" "}
-              <b className={market.rent?.momentum?.yoy >= 0 ? "text-emerald-700" : "text-red-600"}>
+              <b className={market.rent?.momentum?.yoy >= 0 ? "text-emerald-400" : "text-rose-400"}>
                 {market.rent?.momentum?.yoy != null ? pct(market.rent.momentum.yoy * 100) : "—"}
               </b>
             </div>
             <div>
               Value YoY:{" "}
-              <b className={market.value?.momentum?.yoy >= 0 ? "text-emerald-700" : "text-red-600"}>
+              <b className={market.value?.momentum?.yoy >= 0 ? "text-emerald-400" : "text-rose-400"}>
                 {market.value?.momentum?.yoy != null ? pct(market.value.momentum.yoy * 100) : "—"}
               </b>
             </div>
           </div>
           {market.flags?.length > 0 && (
-            <ul className="mt-1.5 space-y-0.5 text-[11px] text-slate-500">
+            <ul className="mt-1.5 space-y-0.5 text-[11px] text-[var(--fg-muted)]">
               {market.flags.map((f: string, i: number) => (
                 <li key={i}>• {f}</li>
               ))}
@@ -194,7 +194,7 @@ export function StrategyPanel({ property, city, project }: { property: Property;
         </div>
       )}
 
-      <p className="text-[11px] text-slate-400">
+      <p className="text-[11px] text-[var(--fg-faint)]">
         Forecasts from Zillow ZORI/ZHVI; returns are a 5-yr Monte Carlo (P10–P90) using this market's own trend. Modeled
         projections, not guarantees.
       </p>
@@ -206,7 +206,7 @@ export function StrategyPanel({ property, city, project }: { property: Property;
 }
 
 function TrendIcon({ trend }: { trend?: string }) {
-  if (trend === "rising") return <TrendingUp size={15} className="text-emerald-600" />;
-  if (trend === "falling") return <TrendingDown size={15} className="text-red-500" />;
-  return <Minus size={15} className="text-slate-400" />;
+  if (trend === "rising") return <TrendingUp size={15} className="text-emerald-400" />;
+  if (trend === "falling") return <TrendingDown size={15} className="text-rose-400" />;
+  return <Minus size={15} className="text-[var(--fg-faint)]" />;
 }

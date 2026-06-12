@@ -35,11 +35,15 @@ export default function HomePage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Projects</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Each project analyzes a set of properties in one market for STR &amp; long-term rental potential.
+          <div className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-cyan-300/80">Rental Property Intelligence</div>
+          <h1 className="font-display text-[34px] leading-none tracking-tight text-[var(--fg)]">
+            Your <span className="italic text-cyan-300">projects</span>
+          </h1>
+          <p className="mt-2 max-w-xl text-sm text-[var(--fg-muted)]">
+            Each project analyzes a set of properties in one market — STR &amp; long-term returns, forecasts, Monte&nbsp;Carlo
+            outcomes, and an owned data engine behind every number.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -54,11 +58,11 @@ export default function HomePage() {
       {projects.length === 0 ? (
         <EmptyState title="No projects yet">
           Create your first project, or load a sample —{" "}
-          <button onClick={() => router.push(`/project/${createDemoProject().id}`)} className="font-medium text-teal-700 hover:underline">
+          <button onClick={() => router.push(`/project/${createDemoProject().id}`)} className="font-medium text-cyan-300 hover:underline">
             Destin
           </button>{" "}
           or{" "}
-          <button onClick={() => router.push(`/project/${createKissimmeeListProject().id}`)} className="font-medium text-teal-700 hover:underline">
+          <button onClick={() => router.push(`/project/${createKissimmeeListProject().id}`)} className="font-medium text-cyan-300 hover:underline">
             Kissimmee (Dad&apos;s Legacy Dunes list)
           </button>
           .
@@ -77,18 +81,18 @@ export default function HomePage() {
                       refresh();
                     }
                   }}
-                  className="no-print absolute right-3 top-3 rounded-md p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                  className="no-print absolute right-3 top-3 rounded-md p-1.5 text-[var(--fg-faint)] opacity-0 transition hover:bg-rose-500/10 hover:text-rose-400 group-hover:opacity-100"
                   title="Delete project"
                 >
                   <Trash2 size={15} />
                 </button>
                 <Link href={`/project/${p.id}`} className="flex flex-1 flex-col">
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 text-xs text-[var(--fg-muted)]">
                     <MapPin size={13} />
                     {city ? `${city.name}, ${city.state}` : p.cityKey}
                   </div>
-                  <h3 className="mt-1 text-base font-semibold text-slate-900">{p.name}</h3>
-                  {p.clientName && <p className="text-xs text-slate-500">Client: {p.clientName}</p>}
+                  <h3 className="mt-1 text-base font-semibold text-[var(--fg)]">{p.name}</h3>
+                  {p.clientName && <p className="text-xs text-[var(--fg-muted)]">Client: {p.clientName}</p>}
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     <Badge tone="teal">{STRATEGY_LABEL[p.strategy]}</Badge>
@@ -98,18 +102,18 @@ export default function HomePage() {
                   </div>
 
                   {(p.budgetMin || p.budgetMax) && (
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-[var(--fg-muted)]">
                       Budget: {usd(p.budgetMin)} – {usd(p.budgetMax)}
                     </p>
                   )}
 
                   {best && best.rating !== undefined && (
-                    <p className="mt-2 text-xs text-slate-500">
-                      Top pick: <span className="font-medium text-slate-700">{best.address}</span> ({best.rating}/100)
+                    <p className="mt-2 text-xs text-[var(--fg-muted)]">
+                      Top pick: <span className="font-medium text-[var(--fg)]">{best.address}</span> ({best.rating}/100)
                     </p>
                   )}
 
-                  <div className="mt-auto pt-3 text-sm font-medium text-teal-700 opacity-0 transition group-hover:opacity-100">
+                  <div className="mt-auto pt-3 text-sm font-medium text-cyan-300 opacity-0 transition group-hover:opacity-100">
                     Open <ArrowRight size={14} className="inline" />
                   </div>
                 </Link>

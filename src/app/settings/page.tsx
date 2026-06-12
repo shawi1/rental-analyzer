@@ -48,14 +48,14 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
-        <p className="mt-1 text-sm text-slate-500">Keys are stored only in this browser and sent directly to the data providers.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-[var(--fg)]">Settings</h1>
+        <p className="mt-1 text-sm text-[var(--fg-muted)]">Keys are stored only in this browser and sent directly to the data providers.</p>
       </div>
 
       <Card className="p-5">
         <div className="mb-4 flex items-center gap-2">
-          <Key size={18} className="text-teal-700" />
-          <h2 className="font-semibold text-slate-900">API keys</h2>
+          <Key size={18} className="text-cyan-300" />
+          <h2 className="font-semibold text-[var(--fg)]">API keys</h2>
         </div>
 
         <div className="space-y-4">
@@ -108,7 +108,7 @@ export default function SettingsPage() {
             href="https://console.anthropic.com/settings/keys"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-teal-700 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:underline"
           >
             Anthropic keys <ExternalLink size={12} />
           </a>
@@ -116,7 +116,7 @@ export default function SettingsPage() {
             href="https://app.rentcast.io/app/api"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-teal-700 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:underline"
           >
             RentCast keys <ExternalLink size={12} />
           </a>
@@ -124,13 +124,13 @@ export default function SettingsPage() {
             href="https://www.huduser.gov/portal/dataset/fmr-api.html"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-teal-700 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:underline"
           >
             HUD token <ExternalLink size={12} />
           </a>
         </div>
 
-        <p className="mt-3 text-[11px] text-slate-400">
+        <p className="mt-3 text-[11px] text-[var(--fg-faint)]">
           The app also works without keys — manual entry and the built-in revenue/cap-rate models need no API. AI and listing
           search features are simply disabled until a key is added. You can alternatively set <code>ANTHROPIC_API_KEY</code> /
           <code> RENTCAST_API_KEY</code> in the deploy environment.
@@ -139,10 +139,10 @@ export default function SettingsPage() {
 
       <Card className="p-5">
         <div className="mb-4 flex items-center gap-2">
-          <Database size={18} className="text-teal-700" />
-          <h2 className="font-semibold text-slate-900">Data backup</h2>
+          <Database size={18} className="text-cyan-300" />
+          <h2 className="font-semibold text-[var(--fg)]">Data backup</h2>
         </div>
-        <p className="mb-3 text-sm text-slate-500">
+        <p className="mb-3 text-sm text-[var(--fg-muted)]">
           Projects are saved in this browser. Export a backup to move data between devices or share with your dad.
         </p>
         <div className="flex flex-wrap items-center gap-2">

@@ -86,12 +86,12 @@ export function ProjectView({ id }: { id: string }) {
   }
 
   if (project === undefined) {
-    return <div className="py-20 text-center text-sm text-slate-400">Loading…</div>;
+    return <div className="py-20 text-center text-sm text-[var(--fg-faint)]">Loading…</div>;
   }
   if (!project) {
     return (
       <EmptyState title="Project not found">
-        <Link href="/" className="text-teal-700 hover:underline">
+        <Link href="/" className="text-cyan-300 hover:underline">
           Back to projects
         </Link>
       </EmptyState>
@@ -119,13 +119,13 @@ export function ProjectView({ id }: { id: string }) {
     <div>
       {/* Header */}
       <div className="mb-4">
-        <Link href="/" className="no-print mb-2 inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800">
+        <Link href="/" className="no-print mb-2 inline-flex items-center gap-1 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]">
           <ArrowLeft size={13} /> All projects
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{project.name}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--fg)]">{project.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-[var(--fg-muted)]">
               <span className="inline-flex items-center gap-1">
                 <MapPin size={13} /> {city.name}, {city.state}
               </span>
@@ -162,7 +162,7 @@ export function ProjectView({ id }: { id: string }) {
       </div>
 
       {strUnknown > 0 && (
-        <div className="no-print mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <div className="no-print mb-4 flex items-start gap-2 rounded-lg border border-amber-500/25 bg-amber-500/[0.08] px-3 py-2 text-xs text-amber-300">
           <AlertTriangle size={15} className="mt-0.5 shrink-0" />
           <span>
             {strUnknown} {strUnknown === 1 ? "property has" : "properties have"} unverified STR status. Open each one and click{" "}
@@ -256,7 +256,7 @@ function FinancingModal({
             <Input type="number" step="0.1" value={f.closingCostPct} onChange={(e) => setF({ ...f, closingCostPct: Number(e.target.value) })} />
           </Field>
         )}
-        <p className="text-xs text-slate-400">Changing this recomputes long-term cash-on-cash for every property in the project.</p>
+        <p className="text-xs text-[var(--fg-faint)]">Changing this recomputes long-term cash-on-cash for every property in the project.</p>
         <div className="flex justify-end gap-2 pt-1">
           <Button onClick={onClose}>Cancel</Button>
           <Button variant="primary" onClick={() => onSave(f)}>

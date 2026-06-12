@@ -113,7 +113,7 @@ export function AddPropertyModal({
 
   return (
     <Modal open={open} onClose={onClose} title="Add property" wide>
-      <div className="mb-4 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
+      <div className="mb-4 flex gap-1 rounded-lg bg-white/[0.05] p-1 text-sm">
         <ModeBtn icon={<PencilLine size={15} />} label="Manual" active={mode === "manual"} onClick={() => setMode("manual")} />
         <ModeBtn icon={<ClipboardPaste size={15} />} label="Smart paste" active={mode === "paste"} onClick={() => setMode("paste")} />
         <ModeBtn icon={<Link2 size={15} />} label="Bulk links" active={mode === "bulk"} onClick={() => setMode("bulk")} />
@@ -136,7 +136,7 @@ function ModeBtn({ icon, label, active, onClick }: { icon: React.ReactNode; labe
     <button
       onClick={onClick}
       className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition ${
-        active ? "bg-white text-teal-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+        active ? "bg-[var(--surface)] text-cyan-300 shadow-sm" : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
       }`}
     >
       {icon}
@@ -215,7 +215,7 @@ function PastePanel({ form, setField }: { form: FormState; setField: (k: keyof F
   }
 
   return (
-    <div className="mb-4 space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+    <div className="mb-4 space-y-3 rounded-lg border border-[var(--hairline)] bg-white/[0.03] p-3">
       <Field label="Listing URL (optional)" hint="Zillow often blocks bots — if Fetch fails, just paste the listing text below.">
         <div className="flex gap-2">
           <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.zillow.com/homedetails/..." />
@@ -232,12 +232,12 @@ function PastePanel({ form, setField }: { form: FormState; setField: (k: keyof F
           {busy === "extract" ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Extract with AI
         </Button>
         {msg && (
-          <span className={`text-xs ${msg.tone === "err" ? "text-red-600" : msg.tone === "ok" ? "text-emerald-600" : "text-slate-500"}`}>
+          <span className={`text-xs ${msg.tone === "err" ? "text-rose-400" : msg.tone === "ok" ? "text-emerald-400" : "text-[var(--fg-muted)]"}`}>
             {msg.text}
           </span>
         )}
       </div>
-      {form.address && <p className="text-xs text-slate-500">Parsed into the form below ↓</p>}
+      {form.address && <p className="text-xs text-[var(--fg-muted)]">Parsed into the form below ↓</p>}
     </div>
   );
 }
@@ -332,7 +332,7 @@ function BulkPanel({ city, onAdd, onClose }: { city: CityConfig; onAdd: (p: Part
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="rounded-lg border border-[var(--hairline)] bg-white/[0.03] p-3">
         <Field
           label="Paste listing links — one per line"
           hint="Works with Zillow, Redfin, Realtor.com, etc. Needs an Anthropic key (it reads each page and extracts the details)."
@@ -350,12 +350,12 @@ function BulkPanel({ city, onAdd, onClose }: { city: CityConfig; onAdd: (p: Part
             {running ? `Importing ${progress.done}/${progress.total}…` : `Import ${urlCount || ""} link${urlCount === 1 ? "" : "s"}`}
           </Button>
           {!running && results && (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-[var(--fg-muted)]">
               {okCount} read{blockedCount ? ` · ${blockedCount} blocked` : ""}
             </span>
           )}
         </div>
-        <p className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-700">
+        <p className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-300">
           <AlertTriangle size={13} className="mt-px shrink-0" />
           Zillow blocks automated reads from servers, so some links may come back &quot;blocked.&quot; For those, open the listing,
           select-all the page text, and use the <b>Smart paste</b> tab. Redfin / Realtor.com links usually read fine.
@@ -365,7 +365,7 @@ function BulkPanel({ city, onAdd, onClose }: { city: CityConfig; onAdd: (p: Part
       {results && results.length > 0 && (
         <div>
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-slate-600">{selected.size} selected to add</span>
+            <span className="text-[var(--fg-muted)]">{selected.size} selected to add</span>
             <Button variant="primary" size="sm" onClick={addSelected} disabled={selected.size === 0}>
               <Plus size={14} /> Add {selected.size || ""} propert{selected.size === 1 ? "y" : "ies"}
             </Button>
@@ -389,16 +389,16 @@ function BulkRowItem({ row, selected, onToggle }: { row: BulkRow; selected: bool
       <button
         onClick={onToggle}
         className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition ${
-          selected ? "border-teal-400 bg-teal-50" : "border-slate-200 bg-white hover:bg-slate-50"
+          selected ? "border-cyan-500/40 bg-cyan-500/[0.08]" : "border-[var(--hairline)] bg-[var(--surface)] hover:bg-white/[0.04]"
         }`}
       >
         <div className="flex min-w-0 items-center gap-2">
-          <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+          <CheckCircle2 size={16} className="shrink-0 text-emerald-400" />
           <div className="min-w-0">
-            <div className="truncate font-medium text-slate-800">
+            <div className="truncate font-medium text-[var(--fg)]">
               {l.address || "Listing"} {l.unit || ""}
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-[var(--fg-muted)]">
               {l.price ? usd(l.price) : "price ?"}
               {l.beds !== undefined ? ` · ${bedsLabel(l.beds, l.baths)}` : ""}
               {l.sqft ? ` · ${l.sqft.toLocaleString()} sqft` : ""}
@@ -410,15 +410,15 @@ function BulkRowItem({ row, selected, onToggle }: { row: BulkRow; selected: bool
     );
   }
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+    <div className="flex items-center gap-2 rounded-lg border border-[var(--hairline)] bg-white/[0.03] px-3 py-2 text-xs">
       {row.status === "blocked" ? (
         <AlertTriangle size={15} className="shrink-0 text-amber-500" />
       ) : (
-        <XCircle size={15} className="shrink-0 text-red-400" />
+        <XCircle size={15} className="shrink-0 text-rose-400" />
       )}
       <div className="min-w-0">
-        <div className="truncate text-slate-600">{short}…</div>
-        <div className="text-slate-400">{row.status === "blocked" ? "Blocked — use Smart paste for this one" : row.message || "Couldn't read"}</div>
+        <div className="truncate text-[var(--fg-muted)]">{short}…</div>
+        <div className="text-[var(--fg-faint)]">{row.status === "blocked" ? "Blocked — use Smart paste for this one" : row.message || "Couldn't read"}</div>
       </div>
     </div>
   );
@@ -630,33 +630,33 @@ function SearchPanel({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <div className="rounded-lg border border-[var(--hairline)] bg-white/[0.03] p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--fg-muted)]">
             Find active for-sale listings in {city.name}, {city.state} within your budget.
           </p>
-          <div className="flex gap-1 rounded-lg bg-slate-200/70 p-0.5 text-xs">
+          <div className="flex gap-1 rounded-lg bg-white/[0.06]/70 p-0.5 text-xs">
             <button
               onClick={() => setSource("ours")}
-              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "ours" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "ours" ? "bg-[var(--surface)] text-cyan-300 shadow-sm" : "text-[var(--fg-muted)]"}`}
             >
               Our API · MLS
             </button>
             <button
               onClick={() => setSource("rentcast")}
-              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "rentcast" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "rentcast" ? "bg-[var(--surface)] text-cyan-300 shadow-sm" : "text-[var(--fg-muted)]"}`}
             >
               RentCast
             </button>
             <button
               onClick={() => setSource("redfin")}
-              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "redfin" ? "bg-white text-teal-700 shadow-sm" : "text-slate-500"}`}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${source === "redfin" ? "bg-[var(--surface)] text-cyan-300 shadow-sm" : "text-[var(--fg-muted)]"}`}
             >
               Redfin · free
             </button>
           </div>
         </div>
-        <p className="mb-2 text-[11px] text-slate-400">
+        <p className="mb-2 text-[11px] text-[var(--fg-faint)]">
           {source === "ours"
             ? "Our API: free & owned, straight from the licensed MLS feed (most reliable + complete). Lights up once your RESO credentials are connected to the rentaliq-data service."
             : source === "redfin"
@@ -686,14 +686,14 @@ function SearchPanel({
           <Button variant="primary" onClick={run} disabled={busy}>
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />} Search listings
           </Button>
-          {err && <span className="text-xs text-red-600">{err}</span>}
+          {err && <span className="text-xs text-rose-400">{err}</span>}
         </div>
       </div>
 
       {results && (
         <div>
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-slate-600">
+            <span className="text-[var(--fg-muted)]">
               {results.length} result{results.length !== 1 ? "s" : ""} · {selected.size} selected
             </span>
             <Button variant="primary" size="sm" onClick={addSelected} disabled={selected.size === 0}>
@@ -701,25 +701,25 @@ function SearchPanel({
             </Button>
           </div>
           <div className="max-h-72 space-y-1.5 overflow-y-auto scroll-thin pr-1">
-            {results.length === 0 && <p className="py-6 text-center text-sm text-slate-400">No listings matched.</p>}
+            {results.length === 0 && <p className="py-6 text-center text-sm text-[var(--fg-faint)]">No listings matched.</p>}
             {results.map((r, i) => (
               <button
                 key={i}
                 onClick={() => toggle(i)}
                 className={`flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition ${
-                  selected.has(i) ? "border-teal-400 bg-teal-50" : "border-slate-200 bg-white hover:bg-slate-50"
+                  selected.has(i) ? "border-cyan-500/40 bg-cyan-500/[0.08]" : "border-[var(--hairline)] bg-[var(--surface)] hover:bg-white/[0.04]"
                 }`}
               >
                 <div className="min-w-0">
-                  <div className="truncate font-medium text-slate-800">{r.address}</div>
-                  <div className="text-xs text-slate-500">
+                  <div className="truncate font-medium text-[var(--fg)]">{r.address}</div>
+                  <div className="text-xs text-[var(--fg-muted)]">
                     {bedsLabel(r.beds, r.baths)}
                     {r.sqft ? ` · ${r.sqft.toLocaleString()} sqft` : ""}
                     {r.daysOnMarket ? ` · ${r.daysOnMarket} DOM` : ""}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="font-semibold text-slate-900">{usd(r.price)}</span>
+                  <span className="font-semibold text-[var(--fg)]">{usd(r.price)}</span>
                   {selected.has(i) && <Badge tone="teal">✓</Badge>}
                 </div>
               </button>

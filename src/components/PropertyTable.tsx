@@ -39,7 +39,7 @@ export function PropertyTable({
   function header(k: SortKey, label: string, cls = "") {
     return (
       <th
-        className={`cursor-pointer select-none px-3 py-2 text-right font-medium hover:text-slate-900 ${cls}`}
+        className={`cursor-pointer select-none px-3 py-2 text-right font-medium hover:text-[var(--fg)] ${cls}`}
         onClick={() => {
           if (sort === k) setDir((d) => (d === 1 ? -1 : 1));
           else { setSort(k); setDir(-1); }
@@ -54,9 +54,9 @@ export function PropertyTable({
   }
 
   return (
-    <div className="overflow-x-auto scroll-thin rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-x-auto scroll-thin rounded-xl border border-[var(--hairline)] bg-[var(--surface)]">
       <table className="w-full min-w-[640px] text-sm">
-        <thead className="border-b border-slate-200 bg-slate-50 text-xs text-slate-500">
+        <thead className="border-b border-[var(--hairline)] bg-white/[0.03] text-xs text-[var(--fg-muted)]">
           <tr>
             <th className="px-3 py-2 text-left font-medium">Property</th>
             <th className="px-3 py-2 text-center font-medium">STR</th>
@@ -77,13 +77,13 @@ export function PropertyTable({
               <tr
                 key={p.id}
                 onClick={() => onOpen(p)}
-                className="cursor-pointer border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                className="cursor-pointer border-b border-[var(--hairline)] last:border-0 hover:bg-white/[0.04]"
               >
                 <td className="px-3 py-2.5">
-                  <div className="font-medium text-slate-800">
-                    {p.address} {p.unit && <span className="text-slate-400">{p.unit}</span>}
+                  <div className="font-medium text-[var(--fg)]">
+                    {p.address} {p.unit && <span className="text-[var(--fg-faint)]">{p.unit}</span>}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-[var(--fg-muted)]">
                     {bedsLabel(p.beds, p.baths)} · {tier.label}
                     {p.daysOnMarket !== undefined ? ` · ${p.daysOnMarket} DOM` : ""}
                   </div>
@@ -91,20 +91,20 @@ export function PropertyTable({
                 <td className="px-3 py-2.5 text-center">
                   <StrDot status={p.strStatus} />
                 </td>
-                <td className="px-3 py-2.5 text-right tnum text-slate-700">{usd(p.price)}</td>
-                {showStr && <td className="px-3 py-2.5 text-right tnum text-slate-700">{str ? usdShort(str.gross) : "—"}</td>}
+                <td className="px-3 py-2.5 text-right tnum text-[var(--fg)]">{usd(p.price)}</td>
+                {showStr && <td className="px-3 py-2.5 text-right tnum text-[var(--fg)]">{str ? usdShort(str.gross) : "—"}</td>}
                 {showStr && (
-                  <td className={`px-3 py-2.5 text-right tnum ${str && str.net < 0 ? "text-red-600" : "text-slate-700"}`}>
+                  <td className={`px-3 py-2.5 text-right tnum ${str && str.net < 0 ? "text-rose-400" : "text-[var(--fg)]"}`}>
                     {str ? usdShort(str.net) : "—"}
                   </td>
                 )}
                 {showLt && (
-                  <td className={`px-3 py-2.5 text-right tnum ${lt && lt.capRate < 4 ? "text-amber-600" : "text-slate-700"}`}>
+                  <td className={`px-3 py-2.5 text-right tnum ${lt && lt.capRate < 4 ? "text-amber-400" : "text-[var(--fg)]"}`}>
                     {lt ? pct(lt.capRate) : "—"}
                   </td>
                 )}
                 {showLt && (
-                  <td className={`px-3 py-2.5 text-right tnum ${lt && lt.cashFlowAnnual < 0 ? "text-red-600" : "text-slate-700"}`}>
+                  <td className={`px-3 py-2.5 text-right tnum ${lt && lt.cashFlowAnnual < 0 ? "text-rose-400" : "text-[var(--fg)]"}`}>
                     {lt ? usdShort(lt.cashFlowAnnual) : "—"}
                   </td>
                 )}
@@ -121,12 +121,12 @@ export function PropertyTable({
 }
 
 function StrDot({ status }: { status: Property["strStatus"] }) {
-  if (status === "allowed") return <CheckCircle2 size={16} className="mx-auto text-emerald-600" />;
-  if (status === "banned") return <XCircle size={16} className="mx-auto text-red-500" />;
+  if (status === "allowed") return <CheckCircle2 size={16} className="mx-auto text-emerald-400" />;
+  if (status === "banned") return <XCircle size={16} className="mx-auto text-rose-400" />;
   return <HelpCircle size={16} className="mx-auto text-amber-500" />;
 }
 
 function ScorePill({ score }: { score: number }) {
-  const tone = score >= 68 ? "bg-emerald-100 text-emerald-800" : score >= 50 ? "bg-teal-100 text-teal-800" : "bg-red-100 text-red-700";
+  const tone = score >= 68 ? "bg-emerald-500/[0.08]0/15 text-emerald-300" : score >= 50 ? "bg-cyan-500/15 text-cyan-300" : "bg-rose-500/15 text-rose-300";
   return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold tnum ${tone}`}>{score}</span>;
 }

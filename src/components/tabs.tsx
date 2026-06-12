@@ -19,20 +19,20 @@ export function MarketTab({ city }: { city: CityConfig }) {
   return (
     <div className="space-y-4">
       {!city.seeded && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <div className="rounded-lg border border-amber-500/25 bg-amber-500/[0.08] px-3 py-2 text-xs text-amber-300">
           This is a generic market template. Benchmarks are rough placeholders — refine them with local AirDNA/Chalet data.
         </div>
       )}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <TrendingUp size={16} className="text-teal-700" /> STR revenue by bedroom (market avg)
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--fg)]">
+            <TrendingUp size={16} className="text-cyan-300" /> STR revenue by bedroom (market avg)
           </div>
           <BenchmarkChart data={benchData} />
-          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 sm:grid-cols-3">
+          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-[var(--fg-muted)] sm:grid-cols-3">
             {city.benchmarks.map((b) => (
               <div key={b.beds}>
-                {b.beds === 0 ? "Studio" : `${b.beds}bd`}: <span className="font-medium text-slate-700">{usdShort(b.grossYr)}</span> ·{" "}
+                {b.beds === 0 ? "Studio" : `${b.beds}bd`}: <span className="font-medium text-[var(--fg)]">{usdShort(b.grossYr)}</span> ·{" "}
                 {b.occ}% · {usd(b.adr)}
               </div>
             ))}
@@ -40,11 +40,11 @@ export function MarketTab({ city }: { city: CityConfig }) {
         </Card>
 
         <Card className="p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <Calendar size={16} className="text-teal-700" /> Seasonality (relative to avg month)
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--fg)]">
+            <Calendar size={16} className="text-cyan-300" /> Seasonality (relative to avg month)
           </div>
           <SeasonalChart data={seasonData.map((d) => ({ month: d.month, gross: d.gross }))} />
-          <p className="mt-1 text-[11px] text-slate-400">
+          <p className="mt-1 text-[11px] text-[var(--fg-faint)]">
             Index where 100 = an average month. Peaks reflect {city.marketType === "beach" ? "summer beach demand" : city.marketType === "theme-park" ? "holiday & summer park demand" : "local seasonality"}.
           </p>
         </Card>
@@ -59,16 +59,16 @@ export function MarketTab({ city }: { city: CityConfig }) {
         </div>
         <div className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">STR regulation</p>
-            <p className="text-slate-700">{city.strRegulation}</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--fg-faint)]">STR regulation</p>
+            <p className="text-[var(--fg)]">{city.strRegulation}</p>
           </div>
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Market notes</p>
-            <p className="text-slate-700">{city.notes}</p>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--fg-faint)]">Market notes</p>
+            <p className="text-[var(--fg)]">{city.notes}</p>
           </div>
         </div>
-        <div className="mt-3 border-t border-slate-100 pt-3">
-          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <div className="mt-3 border-t border-[var(--hairline)] pt-3">
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--fg-faint)]">
             <FileText size={13} /> Research sources
           </p>
           <div className="flex flex-wrap gap-2">
@@ -78,7 +78,7 @@ export function MarketTab({ city }: { city: CityConfig }) {
                 href={s.url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs text-teal-700 hover:bg-teal-50"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--hairline)] px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-500/10"
               >
                 {s.label} <ExternalLink size={11} />
               </a>
@@ -88,11 +88,11 @@ export function MarketTab({ city }: { city: CityConfig }) {
       </Card>
 
       <Card className="p-4">
-        <p className="mb-2 text-sm font-semibold text-slate-800">Location tiers &amp; revenue adjustment</p>
+        <p className="mb-2 text-sm font-semibold text-[var(--fg)]">Location tiers &amp; revenue adjustment</p>
         <div className="overflow-x-auto scroll-thin">
           <table className="w-full min-w-[480px] text-sm">
-            <thead className="text-xs text-slate-500">
-              <tr className="border-b border-slate-200">
+            <thead className="text-xs text-[var(--fg-muted)]">
+              <tr className="border-b border-[var(--hairline)]">
                 <th className="px-2 py-1.5 text-left font-medium">Tier</th>
                 <th className="px-2 py-1.5 text-right font-medium">Revenue ×</th>
                 <th className="px-2 py-1.5 text-left font-medium">Description</th>
@@ -100,12 +100,12 @@ export function MarketTab({ city }: { city: CityConfig }) {
             </thead>
             <tbody>
               {city.tiers.map((t) => (
-                <tr key={t.key} className="border-b border-slate-100 last:border-0">
-                  <td className="px-2 py-1.5 font-medium text-slate-700">{t.label}</td>
-                  <td className="px-2 py-1.5 text-right tnum text-slate-600">
+                <tr key={t.key} className="border-b border-[var(--hairline)] last:border-0">
+                  <td className="px-2 py-1.5 font-medium text-[var(--fg)]">{t.label}</td>
+                  <td className="px-2 py-1.5 text-right tnum text-[var(--fg-muted)]">
                     {t.adjLow}–{t.adjHigh}
                   </td>
-                  <td className="px-2 py-1.5 text-slate-500">{t.description}</td>
+                  <td className="px-2 py-1.5 text-[var(--fg-muted)]">{t.description}</td>
                 </tr>
               ))}
             </tbody>
@@ -123,24 +123,24 @@ export function GuestsTab({ city }: { city: CityConfig }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card className="p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <Users size={16} className="text-teal-700" /> Guest mix
+        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--fg)]">
+          <Users size={16} className="text-cyan-300" /> Guest mix
         </div>
         <GuestPie data={pieData} />
       </Card>
       <Card className="p-4">
-        <p className="mb-2 text-sm font-semibold text-slate-800">Segment behavior</p>
+        <p className="mb-2 text-sm font-semibold text-[var(--fg)]">Segment behavior</p>
         <div className="space-y-2">
           {city.guestSegments.map((g) => (
-            <div key={g.name} className="rounded-lg border border-slate-200 p-2.5">
+            <div key={g.name} className="rounded-lg border border-[var(--hairline)] p-2.5">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                <span className="flex items-center gap-2 text-sm font-medium text-[var(--fg)]">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: g.color }} />
                   {g.name}
                 </span>
                 <Badge tone="slate">{g.share}%</Badge>
               </div>
-              <div className="mt-1 grid grid-cols-3 gap-1 text-[11px] text-slate-500">
+              <div className="mt-1 grid grid-cols-3 gap-1 text-[11px] text-[var(--fg-muted)]">
                 <span>Stay: {g.stay}</span>
                 <span>Group: {g.group}</span>
                 <span>{g.season}</span>
@@ -148,7 +148,7 @@ export function GuestsTab({ city }: { city: CityConfig }) {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-[var(--fg-muted)]">
           Avg stay <b>{city.avgStay} nights</b> · avg group <b>{city.avgGroup}</b> · booking lead <b>{city.bookingLead} days</b>.
         </p>
       </Card>
@@ -190,40 +190,40 @@ export function CompareTab({
     <div className="space-y-4">
       {project.strategy !== "ltr" && revData.length > 0 && (
         <Card className="p-4">
-          <p className="mb-2 text-sm font-semibold text-slate-800">STR gross revenue range (excl. STR-banned)</p>
+          <p className="mb-2 text-sm font-semibold text-[var(--fg)]">STR gross revenue range (excl. STR-banned)</p>
           <RevenueCompareChart data={revData} />
         </Card>
       )}
 
       {project.strategy === "both" && vsData.length > 0 && (
         <Card className="p-4">
-          <p className="mb-2 text-sm font-semibold text-slate-800">STR net vs long-term cash flow</p>
+          <p className="mb-2 text-sm font-semibold text-[var(--fg)]">STR net vs long-term cash flow</p>
           <StrVsLtChart data={vsData} />
-          <p className="mt-1 text-[11px] text-slate-400">
+          <p className="mt-1 text-[11px] text-[var(--fg-faint)]">
             STR net = mid-scenario gross minus operating expenses. Long-term = annual cash flow after debt service.
           </p>
         </Card>
       )}
 
       <Card className="p-4">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <Award size={16} className="text-teal-700" /> Ranked recommendations
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--fg)]">
+          <Award size={16} className="text-cyan-300" /> Ranked recommendations
         </div>
         <div className="space-y-2">
           {ranked.map((p, i) => (
             <button
               key={p.id}
               onClick={() => onOpen(p)}
-              className="flex w-full items-center gap-3 rounded-lg border border-slate-200 px-3 py-2.5 text-left hover:bg-slate-50"
+              className="flex w-full items-center gap-3 rounded-lg border border-[var(--hairline)] px-3 py-2.5 text-left hover:bg-white/[0.04]"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-700 text-xs font-bold text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/15 text-xs font-bold text-white">
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-slate-800">
+                <div className="truncate text-sm font-medium text-[var(--fg)]">
                   {p.address} {p.unit}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-[var(--fg-muted)]">
                   {usd(p.price)} · {bedsLabel(p.beds, p.baths)}
                   {p.strAnalysis ? ` · STR ${usdShort(p.strAnalysis.mid.gross)}/yr` : ""}
                   {p.ltAnalysis ? ` · ${pct(p.ltAnalysis.capRate)} cap` : ""}
@@ -236,10 +236,10 @@ export function CompareTab({
               ) : (
                 <Badge tone="green">STR ok</Badge>
               )}
-              <span className="text-sm font-bold tnum text-slate-700">{p.rating ?? 0}</span>
+              <span className="text-sm font-bold tnum text-[var(--fg)]">{p.rating ?? 0}</span>
             </button>
           ))}
-          {ranked.length === 0 && <p className="py-4 text-center text-sm text-slate-400">Add properties to see rankings.</p>}
+          {ranked.length === 0 && <p className="py-4 text-center text-sm text-[var(--fg-faint)]">Add properties to see rankings.</p>}
         </div>
       </Card>
     </div>
